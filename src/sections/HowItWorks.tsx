@@ -1,5 +1,5 @@
 import { AnimatePresence, motion, useInView, useMotionValueEvent, useReducedMotion, useScroll } from "motion/react";
-import { Brain, Check, Database, Repeat, Zap } from "lucide-react";
+import { Brain, Check, Database, FileText, FlaskConical, HeartPulse, Landmark, MessageSquareText, Phone, Repeat, Zap, Mail, Hospital } from "lucide-react";
 import { useRef, useState } from "react";
 import Badge from "../components/Badge";
 import Scene, { FitToViewport, SceneContext, useSceneFade } from "../components/Scene";
@@ -51,9 +51,10 @@ function StackedStep({ index, step }: { index: number; step: (typeof steps)[numb
         </div>
       </div>
       {/* Sized to the scene (about 300px of content), not to the page width, so tablets don't show a mostly empty box. */}
-      <div className="relative mt-5 h-[340px] w-full overflow-hidden rounded-xl border border-line bg-surface p-5 md:mt-0 md:h-[360px]">
+      {/* In the stacked layout the scene sits in normal flow, so the box hugs its content. */}
+      <div className="relative mt-5 w-full overflow-hidden rounded-xl border border-line bg-surface md:mt-0 [&>div:last-child]:relative [&>div:last-child]:inset-auto">
         <div className="absolute inset-0 bg-grid mask-fade-radial opacity-70" aria-hidden="true" />
-        {inView && <Panel />}
+        <Panel key={inView ? "in-view" : "waiting"} />
       </div>
     </li>
   );
@@ -112,7 +113,7 @@ function PinnedSteps() {
                 </ol>
               </div>
 
-              <div className="relative aspect-[5/4] w-full overflow-hidden rounded-xl border border-line bg-surface p-6 sm:p-8" role="img" aria-label={`${steps[step].title}: ${steps[step].body}`}>
+              <div className="relative h-[420px] w-full overflow-hidden rounded-xl border border-line bg-surface" role="img" aria-label={`${steps[step].title}: ${steps[step].body}`}>
                 <div className="absolute inset-0 bg-grid mask-fade-radial opacity-70" aria-hidden="true" />
                 <AnimatePresence mode="wait">
                   {step === 0 && <SceneConnect key="connect" />}
@@ -134,93 +135,149 @@ const sceneProps = {
   animate: { opacity: 1, scale: 1 },
   exit: { opacity: 0, scale: 1.02 },
   transition: { duration: 0.35, ease: [0.16, 1, 0.3, 1] as const },
-  className: "absolute inset-0 flex items-center justify-center",
+  className: "absolute inset-0 flex items-center justify-center p-4 sm:p-6",
 };
 
-function Hub({ label }: { label: string }) {
-  return (
-    <div className="absolute top-1/2 left-1/2 z-10 flex h-28 w-28 -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center rounded-full border border-primary/30 bg-surface shadow-raised">
-      <span className="text-[12px] text-subtle">Patient</span>
-      <span className="font-heading text-[15px] font-semibold text-fg">{label}</span>
-    </div>
-  );
-}
+const rise = (i: number) => ({
+  initial: { opacity: 0, y: 8 },
+  animate: { opacity: 1, y: 0 },
+  transition: { delay: 0.08 + i * 0.08, duration: 0.35, ease: [0.16, 1, 0.3, 1] as const },
+});
 
+/* Connect: five feeds arriving on the left, merged into one patient record on the right. */
 function SceneConnect() {
-  const sources = ["EHR", "Claims", "ADT", "Labs", "Finance"];
+  const reduce = useReducedMotion();
+  const sources = [
+    { icon: Hospital, name: "EHR", sub: "FHIR R4", n: "1,204" },
+    { icon: FileText, name: "Claims", sub: "837 / 835", n: "38" },
+    { icon: HeartPulse, name: "ADT", sub: "HL7 v2", n: "6" },
+    { icon: FlaskConical, name: "Labs", sub: "ORU", n: "22" },
+    { icon: Landmark, name: "Finance", sub: "GL, budget", n: "12" },
+  ];
+  const fields = [
+    { k: "Encounters", v: "14" },
+    { k: "Conditions", v: "CHF, T2DM" },
+    { k: "Medications", v: "11 active" },
+    { k: "Discharged", v: "Tuesday" },
+  ];
   return (
     <motion.div {...sceneProps}>
-      <div className="relative h-72 w-72">
-        <Hub label="M. Lopez" />
-        {sources.map((s, i) => {
-          const a = (i / sources.length) * Math.PI * 2 - Math.PI / 2;
-          const x = Math.cos(a) * 130;
-          const y = Math.sin(a) * 130;
-          return (
-            <div key={s}>
-              <svg viewBox="0 0 288 288" className="absolute inset-0 h-full w-full overflow-visible" aria-hidden="true">
-                <motion.line x1={144} y1={144} x2={144 + x} y2={144 + y} style={{ stroke: "var(--color-primary)" }} strokeWidth="1.5"
-                  initial={{ pathLength: 0, opacity: 0 }} animate={{ pathLength: 1, opacity: 1 }} transition={{ duration: 0.6, delay: 0.15 + i * 0.1 }} />
-              </svg>
-              <motion.span
-                initial={{ opacity: 0, x: x * 1.3, y: y * 1.3 }} animate={{ opacity: 1, x, y }}
-                transition={{ duration: 0.6, delay: 0.1 + i * 0.1, ease: [0.16, 1, 0.3, 1] }}
-                className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full border border-line bg-surface px-3 py-1.5 text-[13px] font-medium text-fg"
-              >
-                {s}
-              </motion.span>
-            </div>
-          );
-        })}
+      <div className="grid w-full max-w-md grid-cols-[1fr_28px_1.15fr] items-center gap-2">
+        <ul className="space-y-1.5">
+          {sources.map((s, i) => (
+            <motion.li key={s.name} {...rise(i)} className="flex items-center gap-2 rounded-lg border border-line bg-surface px-2 py-1.5">
+              <span className="grid h-6 w-6 shrink-0 place-items-center rounded-md bg-primary-soft text-primary-700"><s.icon className="h-3.5 w-3.5" /></span>
+              <span className="min-w-0 leading-tight">
+                <span className="block truncate text-[12px] font-semibold text-fg">{s.name}</span>
+                <span className="block truncate text-[11px] text-subtle">{s.sub}</span>
+              </span>
+              <span className="ml-auto text-[11px] font-medium text-primary-700 tabular-nums">{s.n}</span>
+            </motion.li>
+          ))}
+        </ul>
+        <div className="relative h-full" aria-hidden="true">
+          <div className="absolute inset-y-4 left-1/2 w-px -translate-x-1/2 bg-line-strong" />
+          {[0, 1, 2].map((d) => (
+            <motion.span key={d} className="absolute left-1/2 h-1.5 w-1.5 -translate-x-1/2 rounded-full bg-primary"
+              initial={{ top: "15%", opacity: 0 }}
+              animate={reduce ? { top: "50%", opacity: 1 } : { top: ["15%", "85%"], opacity: [0, 1, 0] }}
+              transition={reduce ? { duration: 0 } : { duration: 1.6, repeat: Infinity, delay: d * 0.5, ease: "easeInOut" }} />
+          ))}
+        </div>
+        <motion.div {...rise(5)} className="rounded-xl border border-primary/25 bg-surface p-3 shadow-raised">
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-[11px] font-medium text-subtle">One record</span>
+            <span className="flex items-center gap-1 text-[11px] text-accent-700"><Check className="h-3 w-3" /> Synced</span>
+          </div>
+          <p className="mt-0.5 font-heading text-[15px] font-semibold text-fg">M. Lopez, 72</p>
+          <ul className="mt-2 divide-y divide-line">
+            {fields.map((f) => (
+              <li key={f.k} className="flex items-center justify-between gap-2 py-1.5 text-[12px]">
+                <span className="text-muted">{f.k}</span>
+                <span className="truncate font-medium text-fg">{f.v}</span>
+              </li>
+            ))}
+          </ul>
+        </motion.div>
       </div>
     </motion.div>
   );
 }
 
+/* Understand: the evaluated patient, with a risk trend and the drivers behind it. */
 function SceneUnderstand() {
   const rows = [
-    { k: "30-day readmission risk", v: "0.81", tone: "text-amber" },
     { k: "HbA1c control", v: "Gap open", tone: "text-danger" },
     { k: "Colorectal screening", v: "Closed", tone: "text-accent-700" },
     { k: "Care team", v: "PCP Chen, RN Ortiz", tone: "text-fg" },
   ];
+  const pts = [0.38, 0.41, 0.4, 0.46, 0.52, 0.5, 0.61, 0.69, 0.74, 0.81];
+  const w = 300, h = 54;
+  const d = pts.map((p, i) => `${i === 0 ? "M" : "L"}${(i / (pts.length - 1)) * w},${h - p * h}`).join(" ");
   return (
     <motion.div {...sceneProps}>
-      <div className="w-full max-w-sm rounded-xl border border-line bg-surface p-5">
-        <div className="flex items-center justify-between">
+      <div className="w-full max-w-md rounded-xl border border-line bg-surface p-4">
+        <div className="flex items-start justify-between gap-3">
           <div>
-            <p className="text-[13px] text-subtle">Evaluated daily</p>
-            <p className="font-heading text-lg font-semibold text-fg">M. Lopez, 72</p>
+            <p className="text-[12px] text-subtle">Evaluated daily</p>
+            <p className="font-heading text-[16px] font-semibold text-fg">M. Lopez, 72</p>
           </div>
           <Badge tone="amber">Rising risk</Badge>
         </div>
-        <ul className="mt-4 divide-y divide-line">
+        <div className="mt-3 rounded-lg bg-surface-2/70 px-3 pt-2 pb-1">
+          <div className="flex items-baseline justify-between text-[12px]">
+            <span className="text-muted">30-day readmission risk, last 90 days</span>
+            <span className="font-semibold text-amber tabular-nums">0.81</span>
+          </div>
+          <svg viewBox={`0 0 ${w} ${h}`} className="mt-1 h-12 w-full overflow-visible" aria-hidden="true">
+            <motion.path d={d} fill="none" style={{ stroke: "var(--color-amber)" }} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+              initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 0.9, ease: "easeInOut" }} />
+          </svg>
+        </div>
+        <ul className="mt-2 divide-y divide-line">
           {rows.map((r, i) => (
-            <motion.li key={r.k} initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.15 + i * 0.1 }} className="flex items-center justify-between py-2.5 text-[14px]">
+            <motion.li key={r.k} {...rise(i)} className="flex items-center justify-between gap-3 py-2 text-[13px]">
               <span className="text-muted">{r.k}</span>
-              <span className={cn("font-medium tabular-nums", r.tone)}>{r.v}</span>
+              <span className={cn("font-medium", r.tone)}>{r.v}</span>
             </motion.li>
           ))}
         </ul>
-        <p className="mt-4 text-[13px] text-subtle">Drivers: 2 prior CHF admissions, 11 active medications, lives alone</p>
+        <div className="mt-2 flex flex-wrap gap-1.5">
+          {["2 prior CHF admissions", "11 active medications", "Lives alone"].map((t) => (
+            <span key={t} className="rounded-full bg-amber-soft px-2 py-0.5 text-[11px] font-medium text-amber">{t}</span>
+          ))}
+        </div>
       </div>
     </motion.div>
   );
 }
 
+/* Act: the drafted outreach waiting for a clinician, with the other actions it queued. */
 function SceneAct() {
-  const acts = [
-    { t: "Outreach drafted in Spanish", s: "Needs RN approval", tone: "amber" as const },
+  const queued = [
     { t: "PCP visit booked, Tue 10:40", s: "Done", tone: "green" as const },
     { t: "HbA1c order queued for the PCP", s: "Draft", tone: "blue" as const },
   ];
   return (
     <motion.div {...sceneProps}>
-      <div className="flex w-full max-w-sm flex-col gap-3">
-        {acts.map((a, i) => (
-          <motion.div key={a.t} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 + i * 0.12, duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
-            className="flex items-center justify-between gap-3 rounded-xl border border-line bg-surface px-4 py-3.5">
-            <span className="text-[14px] font-medium text-fg">{a.t}</span>
+      <div className="flex w-full max-w-md flex-col gap-2.5">
+        <motion.div {...rise(0)} className="rounded-xl border border-amber/40 bg-surface p-3.5 shadow-raised">
+          <div className="flex items-center justify-between gap-2">
+            <span className="flex items-center gap-1.5 text-[12px] font-medium text-fg"><MessageSquareText className="h-3.5 w-3.5 text-primary-700" /> Outreach drafted in Spanish</span>
+            <Badge tone="amber">Needs RN approval</Badge>
+          </div>
+          <p className="mt-2 rounded-lg bg-surface-2/70 px-3 py-2 text-[12px] leading-relaxed text-fg/85">
+            "Hola Sr. López, ¿cómo se siente desde que salió del hospital? Revise su peso cada mañana. Tenemos una cita el martes a las 10:40."
+          </p>
+          <div className="mt-2.5 flex items-center gap-2">
+            <span className="rounded-full bg-action px-3 py-1 text-[12px] font-medium text-white">Approve and send</span>
+            <span className="rounded-full border border-line-strong px-3 py-1 text-[12px] font-medium text-fg">Edit</span>
+            <span className="ml-auto flex items-center gap-1 text-[11px] text-subtle"><Phone className="h-3 w-3" /> Voice + SMS</span>
+          </div>
+        </motion.div>
+        {queued.map((a, i) => (
+          <motion.div key={a.t} {...rise(i + 1)} className="flex items-center justify-between gap-3 rounded-xl border border-line bg-surface px-3.5 py-2.5">
+            <span className="text-[13px] font-medium text-fg">{a.t}</span>
             <Badge tone={a.tone}>{a.s}</Badge>
           </motion.div>
         ))}
@@ -229,24 +286,47 @@ function SceneAct() {
   );
 }
 
+/* Learn: which outreach works, by channel, and the trend it moves. */
 function SceneLearn() {
+  const channels = [
+    { icon: MessageSquareText, name: "SMS", rate: 62 },
+    { icon: Phone, name: "Voice", rate: 41 },
+    { icon: Mail, name: "Mail", rate: 18 },
+  ];
   const pts = [20, 26, 24, 34, 40, 38, 52, 58, 64, 70, 78, 86];
-  const w = 320, h = 120;
+  const w = 300, h = 60;
   const d = pts.map((p, i) => `${i === 0 ? "M" : "L"}${(i / (pts.length - 1)) * w},${h - (p / 100) * h}`).join(" ");
   return (
     <motion.div {...sceneProps}>
-      <div className="w-full max-w-sm rounded-xl border border-line bg-surface p-5">
-        <div className="flex items-center justify-between">
-          <p className="font-heading text-[15px] font-semibold text-fg">Cost and quality impact</p>
+      <div className="w-full max-w-md rounded-xl border border-line bg-surface p-4">
+        <div className="flex items-center justify-between gap-2">
+          <p className="font-heading text-[15px] font-semibold text-fg">What the agents learned</p>
           <Badge tone="green"><Check className="h-3 w-3" /> Traced to agent runs</Badge>
         </div>
-        <svg viewBox={`0 0 ${w} ${h}`} className="mt-4 h-32 w-full overflow-visible" aria-hidden="true">
-          <motion.path d={d} fill="none" style={{ stroke: "var(--color-primary)" }} strokeWidth="2.5" strokeLinecap="round"
-            initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 1, ease: "easeInOut" }} />
-          <motion.circle cx={w} cy={h - (pts[pts.length - 1] / 100) * h} r="5" style={{ fill: "var(--color-accent)" }} stroke="#ffffff" strokeWidth="2"
-            initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.9 }} />
-        </svg>
-        <div className="mt-2 flex justify-between text-[13px] text-subtle"><span>January</span><span>December</span></div>
+        <p className="mt-3 text-[12px] text-muted">Response rate by channel, last 30 days</p>
+        <ul className="mt-1.5 space-y-1.5">
+          {channels.map((c, i) => (
+            <li key={c.name} className="flex items-center gap-2 text-[12px]">
+              <c.icon className="h-3.5 w-3.5 text-primary-700" />
+              <span className="w-10 text-fg">{c.name}</span>
+              <span className="h-2 flex-1 overflow-hidden rounded-full bg-surface-2">
+                <motion.i className="block h-full rounded-full bg-primary" initial={{ width: 0 }} animate={{ width: `${c.rate}%` }} transition={{ delay: 0.15 + i * 0.1, duration: 0.7 }} />
+              </span>
+              <span className="w-9 text-right font-medium text-fg tabular-nums">{c.rate}%</span>
+            </li>
+          ))}
+        </ul>
+        <span className="mt-2.5 inline-flex rounded-full bg-primary-soft px-2 py-0.5 text-[11px] font-medium text-primary-700">Best window: Tue to Thu, 9 to 11 am</span>
+        <div className="mt-3 border-t border-line pt-2.5">
+          <div className="flex items-baseline justify-between text-[12px]">
+            <span className="text-muted">Care gaps closed, this year</span>
+            <span className="font-medium text-accent-700">Trending up</span>
+          </div>
+          <svg viewBox={`0 0 ${w} ${h}`} className="mt-1 h-12 w-full overflow-visible" aria-hidden="true">
+            <motion.path d={d} fill="none" style={{ stroke: "var(--color-primary)" }} strokeWidth="2.5" strokeLinecap="round"
+              initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 1, ease: "easeInOut" }} />
+          </svg>
+        </div>
       </div>
     </motion.div>
   );
