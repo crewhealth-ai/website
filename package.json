@@ -7,10 +7,11 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
-    "lint": "tsc --noEmit",
+    "lint": "tsc -p tsconfig.app.json && tsc -p tsconfig.node.json",
     "og": "node scripts/og/render-og.cjs",
     "pw": "playwright-cli",
-    "qa": "node scripts/qa/visual-qa.cjs"
+    "qa": "node scripts/qa/visual-qa.cjs",
+    "icons": "node scripts/icons/render-icons.cjs"
   },
   "dependencies": {
     "lucide-react": "^0.552.0",

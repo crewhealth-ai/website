@@ -5,9 +5,12 @@
 <title>CrewHealth.AI OG image</title>
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600&family=Instrument+Serif:ital@1&family=Noto+Sans:wght@400;500&display=swap" rel="stylesheet" />
 <style>
+  /* Same tokens as src/index.css. */
   :root {
-    --bg1: #dde2ff; --bg2: #b9c2ff; --fg: #111735; --muted: #4a5578; --line: #e1e5f6;
-    --primary: #2f5bea; --accent: #5b7bff; --card: #ffffff; --grid: rgb(255 255 255 / 0.45);
+    --hero-from: #b9c2ff; --hero-to: #dde2ff; --grid: rgb(255 255 255 / 0.45);
+    --fg: #111735; --muted: #3d4869; --subtle: #6b7599; --line: #e1e5f6; --line-strong: #c9d0f0;
+    --surface: #ffffff; --surface-2: #eef1ff; --primary: #2f5bea; --primary-700: #2446c9; --primary-soft: #e4e9ff;
+    --amber: #b45309; --amber-soft: #fef3c7;
     --heading: "Outfit", sans-serif;
   }
   * { box-sizing: border-box; margin: 0; }
@@ -17,45 +20,45 @@
     background:
       linear-gradient(to right, var(--grid) 1px, transparent 1px) 0 0 / 48px 48px,
       linear-gradient(to bottom, var(--grid) 1px, transparent 1px) 0 0 / 48px 48px,
-      linear-gradient(180deg, var(--bg2), var(--bg1));
-    display: grid; grid-template-columns: 1fr 440px; gap: 48px; padding: 72px 80px;
+      linear-gradient(180deg, var(--hero-from), var(--hero-to));
+    display: grid; grid-template-columns: 1fr 460px; gap: 56px; align-items: center; padding: 64px 72px 64px 80px;
   }
-  .brand { display: flex; align-items: center; gap: 14px; font-family: var(--heading); font-weight: 700; font-size: 30px; letter-spacing: -0.02em; }
-    h1 { font-family: var(--heading); font-weight: 600; font-size: 64px; line-height: 1.02; letter-spacing: -0.03em; margin-top: 44px; max-width: 620px; }
-  h1 em { font-style: normal; color: var(--primary); }
-  h1 em { font-family: "Instrument Serif", Georgia, serif; font-style: italic; font-weight: 400; font-size: 1.06em; }
-  p.sub { margin-top: 24px; font-size: 32px; line-height: 1.3; color: var(--muted); max-width: 560px; }
-  .stack { position: relative; margin-top: 10px; }
-  .card { background: var(--card); border: 1px solid var(--line); border-radius: 24px; padding: 28px 30px; margin-top: 24px; box-shadow: 0 30px 60px -30px rgb(15 23 42 / 0.25); }
-  .card + .card { margin-top: 16px; }
-  .card .label { font-size: 20px; color: var(--muted); }
-  .card .value { font-family: var(--heading); font-weight: 600; font-size: 72px; letter-spacing: -0.04em; line-height: 1; margin-top: 6px; }
-  .card .delta { font-size: 16px; font-weight: 500; margin-top: 10px; color: var(--accent); }
-  .live { display: inline-flex; align-items: center; gap: 8px; font-size: 15px; font-weight: 500; color: var(--accent); margin-bottom: 14px; }
-  .live i { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); display: inline-block; }
-  .bars { display: flex; align-items: flex-end; gap: 7px; height: 72px; margin-top: 18px; }
-  .bars i { flex: 1; border-radius: 4px; background: var(--line); display: block; }
-  .bars i:last-child { background: linear-gradient(to top, var(--primary), var(--accent)); }
+  .brand { display: flex; align-items: center; gap: 14px; font-family: var(--heading); font-weight: 600; font-size: 30px; letter-spacing: -0.02em; }
+  .brand .ai { color: var(--primary); }
+  h1 { font-family: var(--heading); font-weight: 600; font-size: 62px; line-height: 1.04; letter-spacing: -0.03em; margin-top: 40px; max-width: 600px; }
+  h1 em { font-family: "Instrument Serif", Georgia, serif; font-style: italic; font-weight: 400; font-size: 1.06em; letter-spacing: -0.01em; color: var(--primary); }
+  p.sub { margin-top: 22px; font-size: 27px; line-height: 1.35; color: var(--muted); max-width: 560px; }
+  .card { background: var(--surface); border: 1px solid var(--line); border-radius: 24px; padding: 26px 28px; box-shadow: 0 2px 4px rgb(15 23 42 / 0.05), 0 30px 60px -24px rgb(47 91 234 / 0.28); }
+  .tag { display: inline-flex; align-items: center; gap: 8px; font-size: 16px; font-weight: 500; color: var(--subtle); }
+  .tag i { width: 8px; height: 8px; border-radius: 50%; background: var(--line-strong); display: inline-block; }
+  .head { margin-top: 16px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .title { display: flex; align-items: center; gap: 10px; font-family: var(--heading); font-weight: 600; font-size: 22px; letter-spacing: -0.01em; }
+  .title svg { width: 22px; height: 22px; color: var(--primary-700); }
+  .badge { border-radius: 999px; background: var(--amber-soft); color: var(--amber); font-size: 15px; font-weight: 500; padding: 5px 12px; white-space: nowrap; }
+  .msg { margin-top: 16px; border-radius: 14px; background: var(--surface-2); padding: 14px 16px; font-size: 19px; line-height: 1.45; color: var(--fg); }
+  .actions { margin-top: 18px; display: flex; gap: 10px; align-items: center; }
+  .btn { border-radius: 999px; background: var(--primary); color: #fff; font-family: var(--heading); font-weight: 500; font-size: 18px; padding: 10px 20px; }
+  .btn2 { border-radius: 999px; border: 1px solid var(--line-strong); color: var(--fg); font-family: var(--heading); font-weight: 500; font-size: 18px; padding: 9px 18px; }
+  .who { margin-left: auto; font-size: 15px; color: var(--subtle); }
 </style>
 </head>
 <body>
   <div>
     <div class="brand">
-      <svg viewBox="0 0 64 64" width="48" height="48"><rect width="64" height="64" rx="16" fill="#2f5bea"/><circle cx="22" cy="38" r="10" fill="#fff" stroke="#2f5bea" stroke-width="3"/><circle cx="42" cy="38" r="10" fill="#fff" stroke="#2f5bea" stroke-width="3"/><circle cx="32" cy="24" r="10" fill="#c7d2ff" stroke="#2f5bea" stroke-width="3"/></svg>
-      <span>CrewHealth<span style="color:#2f5bea">.AI</span></span>
+      <svg viewBox="0 0 64 64" width="48" height="48" aria-hidden="true"><rect width="64" height="64" rx="16" fill="#2f5bea"/><circle cx="22" cy="38" r="10" fill="#fff" stroke="#2f5bea" stroke-width="3"/><circle cx="42" cy="38" r="10" fill="#fff" stroke="#2f5bea" stroke-width="3"/><circle cx="32" cy="24" r="10" fill="#c7d2ff" stroke="#2f5bea" stroke-width="3"/></svg>
+      <span>CrewHealth<span class="ai">.AI</span></span>
     </div>
     <h1>AI agents and analytics for <em>healthcare</em> teams.</h1>
-    <p class="sub">Close every care gap, follow up after every discharge. Clinicians approve. Agents do the legwork.</p>
+    <p class="sub">Agents draft the outreach, book the visits and prepare the reports. A clinician approves what reaches patients.</p>
   </div>
-  <div class="stack">
-    <div class="card">
-      <div class="live"><i></i> Live agent activity</div>
-      <div class="label">Gaps closed today</div>
-      <div class="value">142</div>
-      <div class="delta">+18 vs yesterday</div>
-      <div class="bars"><i style="height:24%"></i><i style="height:34%"></i><i style="height:29%"></i><i style="height:44%"></i><i style="height:49%"></i><i style="height:46%"></i><i style="height:62%"></i><i style="height:66%"></i><i style="height:57%"></i><i style="height:73%"></i><i style="height:83%"></i><i style="height:100%"></i></div>
+  <div class="card">
+    <span class="tag"><i></i> Demo workspace</span>
+    <div class="head">
+      <span class="title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> Outreach drafted</span>
+      <span class="badge">Needs RN approval</span>
     </div>
-</div>
+    <p class="msg" lang="es">“Hola, Sr. López. ¿Cómo se siente desde que salió del hospital? Pésese todas las mañanas.”</p>
+    <div class="actions"><span class="btn">Approve and send</span><span class="btn2">Edit</span><span class="who">Voice + SMS</span></div>
   </div>
 </body>
 </html>

@@ -68,6 +68,7 @@ async function run(browser, pagePath, m) {
       h1Count: document.querySelectorAll("h1").length,
       h2Count: document.querySelectorAll("h2").length,
       h1Clipped: h1 ? h1.scrollWidth > h1.clientWidth + 1 : null,
+      h1Text: h1 ? h1.textContent.replace(/\s+/g, " ").trim() : "",
       navSolid: nav ? getComputedStyle(nav).backdropFilter === "none" && getComputedStyle(nav).backgroundColor !== "rgba(0, 0, 0, 0)" : null,
       railLinks: document.querySelectorAll('nav[aria-label="Page progress"] a').length,
       skipLinkFirst: !!document.querySelector('a[href="#main"]'),
@@ -91,6 +92,12 @@ async function run(browser, pagePath, m) {
   }
   await waitForScrollSettle(page);
   r.checks.agentsAnchorTop = await page.evaluate(() => Math.round(document.getElementById("agents").getBoundingClientRect().top));
+  // The heading the anchor lands on must actually be visible: effective opacity of it and every ancestor.
+  r.checks.agentsHeadingOpacity = await page.evaluate(() => {
+    let op = 1;
+    for (let el = document.querySelector("#agents h2"); el; el = el.parentElement) op *= parseFloat(getComputedStyle(el).opacity || "1");
+    return +op.toFixed(2);
+  });
   await page.screenshot({ path: `${OUT}/${tag}-02-agents.png` });
 
   // Demo gate: steps run, the approval button appears, approving continues to "Loop closed".
@@ -98,12 +105,22 @@ async function run(browser, pagePath, m) {
   await waitForScrollSettle(page);
   await scrollTo(page, (await page.evaluate(() => window.scrollY)) + 1, 6000);
   const approve = page.getByRole("button", { name: "Approve and continue" });
+  // The demo card also holds an invisible copy of the finished run (it reserves the height), so match the visible outcome.
+  const loopClosed = page.getByText("Loop closed").filter({ visible: true });
   r.checks.approveVisible = await approve.isVisible().catch(() => false);
+  // The button must receive the click itself, not an invisible layer of a neighbouring scene.
+  r.checks.approveHittable = await approve.evaluate(async (b) => {
+    b.scrollIntoView({ block: "center" });
+    await new Promise((res) => setTimeout(res, 900));
+    const r = b.getBoundingClientRect();
+    const hit = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
+    return !!hit && b.contains(hit);
+  }).catch(() => false);
   if (r.checks.approveVisible) {
     await approve.click();
-    await page.getByText("Loop closed").waitFor({ timeout: 10000 }).catch(() => {});
+    await loopClosed.waitFor({ timeout: 10000 }).catch(() => {});
   }
-  r.checks.loopClosed = await page.getByText("Loop closed").isVisible().catch(() => false);
+  r.checks.loopClosed = await loopClosed.isVisible().catch(() => false);
   await page.screenshot({ path: `${OUT}/${tag}-03-demo.png` });
 
   // Autonomy dial is a radiogroup with a working selection.
@@ -119,7 +136,7 @@ async function run(browser, pagePath, m) {
   r.checks.formLabels = await page.locator('form label[for="cta-email"], form label[for="cta-org"]').count();
   r.checks.emailInvalidWhenEmpty = await page.evaluate(() => !document.getElementById("cta-email").validity.valid);
   await page.getByLabel("Work email").fill("qa@example.org");
-  await page.getByLabel("Organization").fill("Riverbend Health ACO");
+  await page.getByLabel("Organization").fill("Example ACO");
   await page.getByRole("button", { name: "Book a demo" }).last().click().catch(() => {});
   await settle(600);
   r.checks.formStatus = (await page.locator('form [role="status"]').textContent().catch(() => "")).trim().slice(0, 80);
@@ -159,6 +176,9 @@ async function run(browser, pagePath, m) {
     if (c.noOverflow === false) flags.push("overflow");
     if (c.h1Count !== 1) flags.push(`h1=${c.h1Count}`);
     if (c.h1Clipped) flags.push("h1 clipped");
+    if (!/^AI agents and analytics for healthcare teams\.$/.test(c.h1Text || "")) flags.push(`h1 text "${c.h1Text}"`);
+    if (c.approveVisible && c.approveHittable === false) flags.push("approve button covered");
+    if (c.agentsHeadingOpacity !== undefined && c.agentsHeadingOpacity < 0.95) flags.push(`agents heading opacity ${c.agentsHeadingOpacity}`);
     if (c.navSolid === false) flags.push("nav not solid");
     if (c.approveVisible === false && !r.reduced) flags.push("no approve gate");
     if (c.loopClosed === false) flags.push("loop not closed");

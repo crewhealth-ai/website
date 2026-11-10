@@ -1,14 +1,13 @@
 import type { ComponentProps, ReactNode } from "react";
 import { cn } from "../lib/utils";
 
-type Variant = "primary" | "secondary" | "onDark" | "inverse";
+type Variant = "primary" | "secondary" | "inverse";
 type Size = "sm" | "md" | "lg";
 
 /* One filled style marks the main action; one outlined style for everything secondary. No shadows. */
 const variants: Record<Variant, string> = {
   primary: "bg-action text-white hover:bg-action-hover active:translate-y-px",
   secondary: "border border-line-strong bg-surface text-fg hover:border-fg active:translate-y-px",
-  onDark: "border border-white/30 bg-transparent text-white hover:bg-white/10 active:translate-y-px",
   inverse: "bg-white text-primary-900 hover:bg-primary-soft active:translate-y-px",
 };
 

@@ -7,28 +7,20 @@ import AgentDemo from "./sections/AgentDemo";
 import Trust from "./sections/Trust";
 import Close from "./sections/Close";
 
-export const sections = [
-  { id: "top", label: "Overview" },
-  { id: "how", label: "How it works" },
-  { id: "agents", label: "Agents" },
-  { id: "demo", label: "Demo" },
-  { id: "trust", label: "Trust" },
-  { id: "contact", label: "Book a demo" },
-];
-
 export default function App() {
   return (
     <>
       <div className="page-ground" aria-hidden="true" />
+      {/* Fixed above the header and moved off screen until focused, so it is never covered. */}
       <a
         href="#main"
-        className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[100] focus:rounded-md focus:bg-fg focus:px-3 focus:py-2 focus:text-sm focus:text-white"
+        className="fixed top-3 left-3 z-[100] -translate-y-24 rounded-md bg-fg px-3 py-2 text-sm text-white transition-transform focus:translate-y-0"
       >
         Skip to content
       </a>
       <Navbar />
       <ScrollProgress />
-      <main id="main" className="overflow-x-clip">
+      <main id="main" tabIndex={-1} className="overflow-x-clip outline-none">
         <Hero />
         <HowItWorks />
         <Agents />

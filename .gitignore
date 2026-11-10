@@ -8,3 +8,4 @@ dist
 .impeccable/
 .qa/
 __pycache__/
+*.tsbuildinfo

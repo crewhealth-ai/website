@@ -8,8 +8,8 @@ const ENDPOINT = import.meta.env.VITE_DEMO_ENDPOINT as string | undefined;
 const CONTACT_EMAIL = "hello@crewhealth.ai";
 
 const proof = [
-  { icon: ShieldCheck, text: "HIPAA-ready, BAA included" },
-  { icon: Waypoints, text: "Reads EHR, claims, ADT and FHIR" },
+  { icon: ShieldCheck, text: "HIPAA BAA before any PHI is shared" },
+  { icon: Waypoints, text: "Reads EHR (FHIR, HL7), claims and ADT" },
   { icon: FileCheck2, text: "Every action logged" },
 ];
 
@@ -26,14 +26,14 @@ export default function Close() {
     if (!ENDPOINT) {
       const body = `Organization: ${data.org}\nWork email: ${data.email}\n\nPlease book a CrewHealth demo.`;
       window.location.href = `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent("Book a CrewHealth demo")}&body=${encodeURIComponent(body)}`;
-      setStatus({ kind: "sent", text: `Your email app is opening with this request. If it does not, write to ${CONTACT_EMAIL}.` });
+      setStatus({ kind: "sent", text: `Your email app should open with this request. Press Send there to reach us. If nothing opens, write to ${CONTACT_EMAIL}.` });
       return;
     }
-    setStatus({ kind: "sending", text: "Sending your request." });
+    setStatus({ kind: "sending", text: "Sending your request…" });
     try {
       const res = await fetch(ENDPOINT, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data) });
       if (!res.ok) throw new Error(String(res.status));
-      setStatus({ kind: "sent", text: "Request sent. We reply within one business day." });
+      setStatus({ kind: "sent", text: "Request sent. We aim to reply within one business day." });
       form.reset();
     } catch {
       setStatus({ kind: "error", text: `We could not send this. Write to ${CONTACT_EMAIL} instead.` });
@@ -43,12 +43,12 @@ export default function Close() {
   const fieldClass = "h-12 w-full rounded-lg border border-white/25 bg-white px-4 text-[16px] text-fg placeholder:text-subtle focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white";
 
   return (
-    <Scene id="contact" height={140} surface="dark" exitFade={false} enterSlide={false} contentClassName="text-white">
+    <Scene id="contact" height={140} surface="dark" exitFade={false} enterSlide={false} className="[&_:focus-visible]:outline-white" contentClassName="text-white">
       <div className="grid gap-10 lg:grid-cols-[1.1fr_1fr] lg:items-start lg:gap-16">
         <div>
-          <h2 className="text-[32px] leading-[1.1] text-white sm:text-[40px] lg:text-[clamp(36px,5.2vh,48px)]">See CrewHealth run on your data.</h2>
+          <h2 className="text-[32px] leading-[1.1] text-white sm:text-[40px] lg:text-[clamp(36px,5.2vh,48px)]">See what CrewHealth finds in your data.</h2>
           <p className="mt-4 max-w-[48ch] text-[clamp(16px,2.1vh,18px)] leading-relaxed text-white/80">
-            Share a de-identified extract and we show the gaps, the risk and the savings that analytics and an agent crew could reach in year one. We reply within one business day.
+            We walk you through the product on a call. Share a de-identified extract and we can also estimate the gaps, the risk and the savings that analytics and an agent crew could reach in year one. We aim to reply within one business day.
           </p>
           <ul className="mt-8 flex flex-wrap gap-x-7 gap-y-3">
             {proof.map((p) => (
@@ -66,7 +66,7 @@ export default function Close() {
           </div>
           <div className="grid gap-1.5">
             <label htmlFor="cta-org" className="text-[14px] font-medium text-white/90">Organization</label>
-            <input id="cta-org" name="org" type="text" required autoComplete="organization" placeholder="Health system, payer, ACO or practice" className={fieldClass} />
+            <input id="cta-org" name="org" type="text" required autoComplete="organization" placeholder="e.g. Example Health ACO" className={fieldClass} />
           </div>
           <Button type="submit" size="lg" variant="inverse" className="mt-1 w-full" disabled={status.kind === "sending"}>
             Book a demo <ArrowRight className="h-4 w-4" />
@@ -88,6 +88,9 @@ export default function Close() {
           </nav>
         </div>
         <p className="mt-6 text-[14px] text-white/60">© {new Date().getFullYear()} CrewHealth.AI · {CONTACT_EMAIL}</p>
+        <p className="mt-2 max-w-[70ch] text-[14px] text-white/60">
+          Product views on this page show a demo workspace with fictional patients and organizations. HEDIS® is a registered trademark of the National Committee for Quality Assurance (NCQA).
+        </p>
       </footer>
     </Scene>
   );

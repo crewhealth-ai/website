@@ -19,7 +19,7 @@ export default function Logo({ className, onDark = false }: { className?: string
   return (
     <a href="#top" className={cn("flex items-center gap-2.5", className)} aria-label="CrewHealth.AI home">
       <Mark onDark={onDark} className="h-8 w-8" />
-      <span className={cn("font-heading text-[19px] font-semibold tracking-[-0.02em]", onDark ? "text-white" : "text-fg")}>
+      <span translate="no" className={cn("font-heading text-[19px] font-semibold tracking-[-0.02em]", onDark ? "text-white" : "text-fg")}>
         CrewHealth<span className={onDark ? "text-white/70" : "text-primary"}>.AI</span>
       </span>
     </a>

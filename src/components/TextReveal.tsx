@@ -1,10 +1,11 @@
 import { motion, useReducedMotion } from "motion/react";
+import { Fragment } from "react";
 import { cn } from "../lib/utils";
 import { useSceneActive } from "./Scene";
 
 /**
  * Reveals a sentence word by word, each sliding up through its own mask.
- * Wrap a phrase in [[double brackets]] to render it with the gradient.
+ * Wrap a phrase in [[double brackets]] to set it in the italic serif accent.
  * Inside a Scene it plays when the scene becomes active; otherwise on view.
  */
 export default function TextReveal({
@@ -31,12 +32,15 @@ export default function TextReveal({
   const tokens = tokenize(text);
   let i = 0;
 
+  // Real spaces between the word masks, so the heading reads, copies, finds and translates as words.
   const content = tokens.map((t, k) => {
     const idx = i++;
     return (
-      <span key={k} className="inline-block overflow-hidden pb-[0.1em] -mb-[0.1em] pr-[0.25em]">
+      <Fragment key={k}>
+        {k > 0 && " "}
+        <span className="inline-block overflow-hidden pb-[0.1em] -mb-[0.1em]">
         <motion.span
-          className="inline-block will-change-transform"
+          className="inline-block"
           variants={{
             hidden: { y: "110%", opacity: 0, filter: "blur(8px)" },
             show: {
@@ -44,12 +48,15 @@ export default function TextReveal({
               opacity: 1,
               filter: "blur(0px)",
               transition: { duration: 0.9, delay: delay + idx * stagger, ease: [0.16, 1, 0.3, 1] },
+              // Drop the filter once the word has landed: a blur(0px) filter still costs a filter pass.
+              transitionEnd: { filter: "none" },
             },
           }}
         >
           {t.gradient ? <span className="text-emphasis">{t.word}</span> : t.word}
         </motion.span>
-      </span>
+        </span>
+      </Fragment>
     );
   });
 

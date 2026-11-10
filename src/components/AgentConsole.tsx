@@ -13,21 +13,21 @@ const nav = [
 ];
 
 const kpis = [
-  { label: "Gaps closed today", value: "142", delta: "+18 vs yesterday", good: true },
-  { label: "Pending approvals", value: "9", delta: "RN queue, 4 min average", good: null },
-  { label: "Readmissions avoided, 30 days", value: "27", delta: "+6 vs last month", good: true },
+  { label: "Gaps closed today", value: "142", delta: "+24 vs yesterday", good: true },
+  { label: "Pending approvals", value: "9", delta: "RN queue, 4 min average wait", good: null },
+  { label: "Discharges contacted in 2 business days", value: "31 of 33", delta: "This month", good: null },
 ];
 
 const feed = [
   { who: "Transitions agent", what: "Patient reached. PCP follow-up booked Tue 10:40", tone: "green" },
   { who: "RN care manager", what: "Approved outreach with a note on the diuretic dose", tone: "green" },
-  { who: "Rising-risk agent", what: "30-day readmission risk 0.81, 3 drivers found", tone: "amber" },
+  { who: "Transitions agent", what: "Readmission risk score 0.81, 3 drivers found", tone: "amber" },
   { who: "Care gap agent", what: "HbA1c gap closed, lab reconciled from the HIE", tone: "blue" },
-  { who: "Wellness visit agent", what: "17 wellness visits booked for Dr. Chen on Thursday", tone: "blue" },
+  { who: "Preventive visit agent", what: "17 wellness visits booked for Dr. Chen on Thursday", tone: "blue" },
 ];
 
 const risk = [
-  { name: "M. Lopez", age: 72, dx: "CHF", score: 0.81 },
+  { name: "M. López", age: 72, dx: "CHF", score: 0.81 },
   { name: "J. Patel", age: 68, dx: "CKD 3b", score: 0.64 },
   { name: "R. Nguyen", age: 75, dx: "COPD", score: 0.57 },
   { name: "T. Brennan", age: 66, dx: "T2DM", score: 0.42 },
@@ -39,18 +39,18 @@ const bars = [34, 48, 41, 62, 70, 66, 88, 94, 81, 103, 118, 142];
 export default function AgentConsole({ className }: { className?: string }) {
   const reduce = useReducedMotion();
   return (
-    <div className={cn("relative", className)} role="img" aria-label="The CrewHealth console: today's closed gaps, pending approvals, a live agent activity feed, the rising-risk list, and gaps closed by week.">
+    <div className={cn("relative", className)} role="img" aria-label="Demo workspace of the CrewHealth console with fictional patients: today's closed gaps, pending approvals, agent activity, the rising-risk list and gaps closed by day.">
       <div className="relative overflow-hidden rounded-2xl border border-line bg-surface shadow-float">
         <div className="flex items-center gap-3 border-b border-line bg-surface-2/60 px-4 py-2.5">
           <span className="flex gap-1.5">
             <i className="h-2.5 w-2.5 rounded-full bg-line-strong" /><i className="h-2.5 w-2.5 rounded-full bg-line-strong" /><i className="h-2.5 w-2.5 rounded-full bg-line-strong" />
           </span>
-          <span className="ml-2 text-[12px] font-medium text-subtle">CrewHealth console · Riverbend Health</span>
+          <span className="ml-2 text-[12px] font-medium text-subtle">CrewHealth console · Demo workspace</span>
           <span className="ml-auto flex items-center gap-2 rounded-md border border-line bg-surface px-2.5 py-1 text-[12px] text-subtle"><Search className="h-3.5 w-3.5" /> Search patients, agents, measures</span>
         </div>
 
         <div className="grid grid-cols-[156px_1fr]">
-          <aside className="border-r border-line bg-surface-2/40 p-3">
+          <div className="border-r border-line bg-surface-2/40 p-3">
             <p className="px-2 text-[11px] font-medium text-subtle">Workspace</p>
             <ul className="mt-2 space-y-0.5">
               {nav.map((n) => (
@@ -63,9 +63,9 @@ export default function AgentConsole({ className }: { className?: string }) {
               <p className="text-[11px] font-medium text-accent-700">Autonomy</p>
               <p className="mt-0.5 text-[13px] font-medium text-fg">Act with approval</p>
             </div>
-          </aside>
+          </div>
 
-          <main className="p-4">
+          <div className="p-4">
             <div className="grid grid-cols-3 gap-3">
               {kpis.map((k) => (
                 <div key={k.label} className="rounded-xl border border-line bg-surface p-3.5">
@@ -79,8 +79,8 @@ export default function AgentConsole({ className }: { className?: string }) {
             <div className="mt-3 grid grid-cols-[1.25fr_1fr] gap-3">
               <div className="rounded-xl border border-line bg-surface p-3.5">
                 <div className="flex items-center justify-between">
-                  <p className="text-[13px] font-semibold text-fg">Live agent activity</p>
-                  <span className="flex items-center gap-1.5 text-[12px] text-accent-700"><i className="h-1.5 w-1.5 rounded-full bg-accent" /> Live</span>
+                  <p className="font-heading text-[13px] font-semibold text-fg">Agent activity</p>
+                  <span className="flex items-center gap-1.5 text-[12px] text-accent-700"><i className="h-1.5 w-1.5 rounded-full bg-accent" /> Today</span>
                 </div>
                 <ul className="mt-2.5 space-y-1.5">
                   {feed.map((f, i) => (
@@ -98,7 +98,7 @@ export default function AgentConsole({ className }: { className?: string }) {
 
               <div className="flex flex-col gap-3">
                 <div className="rounded-xl border border-line bg-surface p-3.5">
-                  <p className="text-[13px] font-semibold text-fg">Rising risk, next 30 days</p>
+                  <p className="font-heading text-[13px] font-semibold text-fg">Rising risk, next 30 days</p>
                   <ul className="mt-2 space-y-1.5">
                     {risk.map((r) => (
                       <li key={r.name} className="flex items-center gap-2 text-[12px]">
@@ -116,8 +116,8 @@ export default function AgentConsole({ className }: { className?: string }) {
                 </div>
                 <div className="rounded-xl border border-line bg-surface p-3.5">
                   <div className="flex items-center justify-between">
-                    <p className="text-[13px] font-semibold text-fg">Gaps closed by week</p>
-                    <span className="text-[12px] text-subtle">Q4</span>
+                    <p className="font-heading text-[13px] font-semibold text-fg">Gaps closed by day</p>
+                    <span className="text-[12px] text-subtle">Last 12 days</span>
                   </div>
                   <div className="mt-2 flex h-14 items-end gap-1.5">
                     {bars.map((b, i) => (
@@ -129,7 +129,7 @@ export default function AgentConsole({ className }: { className?: string }) {
                 </div>
               </div>
             </div>
-          </main>
+          </div>
         </div>
       </div>
     </div>

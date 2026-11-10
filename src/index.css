@@ -1,7 +1,30 @@
 @import "tailwindcss";
+/* Only the app's own files define classes; the vendored design skills under .claude are documentation. */
+@source not "../.claude";
+
+/* Fallback faces sized to Outfit's metrics, so the hero headline keeps its line breaks while the web
+   font loads and nothing below it moves when Outfit arrives (measured in Chromium against Arial). */
+@font-face {
+  font-family: "Outfit Fallback";
+  src: local("Arial Bold"), local("Arial-BoldMT"), local("Liberation Sans Bold");
+  font-weight: 600;
+  size-adjust: 93.9%;
+  ascent-override: 106.5%;
+  descent-override: 27.7%;
+  line-gap-override: 0%;
+}
+@font-face {
+  font-family: "Outfit Fallback";
+  src: local("Arial"), local("ArialMT"), local("Liberation Sans");
+  font-weight: 500;
+  size-adjust: 99.3%;
+  ascent-override: 100.7%;
+  descent-override: 26.2%;
+  line-gap-override: 0%;
+}
 
 @theme {
-  --font-heading: "Outfit", ui-sans-serif, system-ui, sans-serif;
+  --font-heading: "Outfit", "Outfit Fallback", ui-sans-serif, system-ui, sans-serif;
   --font-body: "Noto Sans", ui-sans-serif, system-ui, sans-serif;
 
   --color-bg: #dde2ff;
@@ -9,7 +32,7 @@
   --color-surface-2: #eef1ff;
   --color-fg: #111735;
   --color-muted: #3d4869;
-  --color-subtle: #6b7599;
+  --color-subtle: #5a648b;
   --color-line: #e1e5f6;
   --color-line-strong: #c9d0f0;
   --color-primary: #2f5bea;
@@ -18,14 +41,12 @@
   --color-primary-soft: #e4e9ff;
   --color-action: #2f5bea;
   --color-action-hover: #2446c9;
-  --color-teal: #6f8bff;
   --color-accent: #5b7bff;
   --color-accent-700: #3451c9;
   --color-accent-soft: #e6eaff;
   --color-amber: #b45309;
   --color-amber-soft: #fef3c7;
   --color-danger: #dc2626;
-  --color-danger-soft: #fee2e2;
   --color-hero-from: #b9c2ff;
   --color-hero-to: #dde2ff;
   --color-logo-dot: #c7d2ff;
@@ -35,35 +56,6 @@
   --shadow-raised: 0 1px 2px rgb(15 23 42 / 0.04), 0 4px 12px rgb(15 23 42 / 0.08);
   --shadow-float: 0 2px 4px rgb(15 23 42 / 0.05), 0 30px 60px -24px color-mix(in srgb, var(--color-primary) 28%, transparent);
 }
-/* Concept A (clinical blue and green) kept as an opt-in theme for reference: add data-theme="clinical" to <html>.
-   Its heading font (Figtree) is not loaded by default. */
-[data-theme="clinical"] {
-  --font-heading: "Figtree", ui-sans-serif, system-ui, sans-serif;
-  --color-bg: #ffffff;
-  --color-surface: #ffffff;
-  --color-surface-2: #f1f5f9;
-  --color-fg: #0f172a;
-  --color-muted: #475569;
-  --color-subtle: #64748b;
-  --color-line: #e2e8f0;
-  --color-line-strong: #cbd5e1;
-  --color-primary: #0284c7;
-  --color-primary-700: #0369a1;
-  --color-primary-900: #0c4a6e;
-  --color-primary-soft: #e0f2fe;
-  --color-action: #0369a1;
-  --color-action-hover: #075985;
-  --color-teal: #0891b2;
-  --color-accent: #16a34a;
-  --color-accent-700: #15803d;
-  --color-accent-soft: #dcfce7;
-  --color-hero-from: #f8fafc;
-  --color-hero-to: #f8fafc;
-  --color-logo-dot: #4ade80;
-  --color-grid-line: rgb(2 132 199 / 0.12);
-}
-[data-theme="clinical"] .text-emphasis { font-family: inherit; font-style: normal; font-weight: inherit; font-size: inherit; letter-spacing: inherit; }
-
 
 @layer base {
   html {
@@ -83,6 +75,8 @@
   }
   p { text-wrap: pretty; }
   ::selection { background: var(--color-primary-soft); color: var(--color-primary-900); }
+  button:not(:disabled), [role="tab"], [role="radio"] { cursor: pointer; }
+  a, button { touch-action: manipulation; }
   :focus-visible { outline: 2px solid var(--color-action); outline-offset: 2px; border-radius: 6px; }
   @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
 }
@@ -127,11 +121,12 @@ body {
   letter-spacing: -0.01em;
 }
 
-@utility bg-grid {
+/* The page grid drawn in ink, for white panels where the white page grid would not show. */
+@utility bg-grid-ink {
   background-image:
-    linear-gradient(to right, var(--color-grid-line) 1px, transparent 1px),
-    linear-gradient(to bottom, var(--color-grid-line) 1px, transparent 1px);
-  background-size: 48px 48px;
+    linear-gradient(to right, rgb(47 91 234 / 0.07) 1px, transparent 1px),
+    linear-gradient(to bottom, rgb(47 91 234 / 0.07) 1px, transparent 1px);
+  background-size: 24px 24px;
 }
 
 @utility bg-grid-on-dark {
@@ -143,9 +138,6 @@ body {
 
 @utility mask-fade-radial {
   mask-image: radial-gradient(ellipse at center, black 30%, transparent 72%);
-}
-@utility mask-fade-b {
-  mask-image: linear-gradient(to bottom, black 50%, transparent);
 }
 @utility mask-fade-tail {
   mask-image: linear-gradient(to bottom, black 82%, transparent);

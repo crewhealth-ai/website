@@ -1,39 +1,61 @@
 import { motion, useReducedMotion, useScroll, useSpring } from "motion/react";
 import { useEffect, useState } from "react";
-import { sections } from "../App";
+import { sections } from "../lib/sections";
+import { useDesktop } from "../lib/useDesktop";
 import { cn } from "../lib/utils";
 
-/** A single thin line down the left edge with a dot per section. The line fills as the page scrolls; the current dot glows. */
+/**
+ * A single thin line down the left edge with a dot where each section starts. The line fills as the
+ * page scrolls, so it reaches a dot exactly when its section arrives; passed dots fill, the current one glows.
+ * Desktop only: on smaller screens it renders nothing and listens to nothing.
+ */
 export default function ScrollProgress() {
+  const desktop = useDesktop();
+  return desktop ? <Rail /> : null;
+}
+
+function Rail() {
   const reduce = useReducedMotion();
   const { scrollYProgress } = useScroll();
   const fill = useSpring(scrollYProgress, { stiffness: 120, damping: 24, mass: 0.3 });
+  const [stops, setStops] = useState<number[]>(() => sections.map((_, i) => i / (sections.length - 1)));
   const [active, setActive] = useState(0);
 
   useEffect(() => {
+    // Section offsets are read when the layout changes, never inside the scroll handler.
+    let tops: number[] = [];
+    const measure = () => {
+      const max = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
+      tops = sections.map((s) => document.getElementById(s.id)?.offsetTop ?? 0);
+      setStops(tops.map((t) => Math.min(1, t / max)));
+      update();
+    };
     const update = () => {
       const mid = window.scrollY + window.innerHeight * 0.4;
       let idx = 0;
-      sections.forEach((s, i) => {
-        const el = document.getElementById(s.id);
-        if (el && el.offsetTop <= mid) idx = i;
+      tops.forEach((t, i) => {
+        if (t <= mid) idx = i;
       });
       setActive(idx);
     };
-    update();
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(document.body);
     window.addEventListener("scroll", update, { passive: true });
-    return () => window.removeEventListener("scroll", update);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener("scroll", update);
+    };
   }, []);
 
   return (
     <nav
-      className="pointer-events-none fixed top-24 bottom-10 left-[max(14px,calc((100vw-80rem)/2-28px))] z-40 hidden w-8 lg:block"
+      className="pointer-events-none fixed top-24 bottom-10 left-[max(14px,calc((100vw-80rem)/2-28px))] z-40 w-8"
       aria-label="Page progress"
     >
-      <div className="relative mx-auto h-full w-px bg-line">
+      <div className="relative mx-auto h-full w-px bg-line-strong">
         <motion.div style={{ scaleY: reduce ? scrollYProgress : fill }} className="absolute inset-0 origin-top bg-primary" />
         {sections.map((s, i) => {
-          const top = `${(i / (sections.length - 1)) * 100}%`;
           const on = i === active;
           return (
             <a
@@ -42,9 +64,14 @@ export default function ScrollProgress() {
               aria-label={s.label}
               aria-current={on ? "location" : undefined}
               className="group pointer-events-auto absolute left-1/2 grid h-7 w-7 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full"
-              style={{ top }}
+              style={{ top: `${stops[i] * 100}%` }}
             >
-              <span className={cn("block rounded-full transition-all duration-300", on ? "h-2.5 w-2.5 bg-primary ring-4 ring-primary/15" : "h-1.5 w-1.5 bg-line-strong group-hover:bg-primary")} />
+              <span
+                className={cn(
+                  "block h-2.5 w-2.5 rounded-full transition-[transform,background-color,box-shadow] duration-300",
+                  on ? "scale-100 bg-primary ring-4 ring-primary/15" : i < active ? "scale-[0.7] bg-primary" : "scale-[0.7] bg-subtle group-hover:bg-primary",
+                )}
+              />
             </a>
           );
         })}

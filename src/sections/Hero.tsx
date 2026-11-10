@@ -1,18 +1,18 @@
 import { motion, useMotionTemplate, useReducedMotion, useTransform } from "motion/react";
 import { ArrowRight, Lock, Play, ShieldCheck, UserCheck } from "lucide-react";
-import { useLayoutEffect, useRef } from "react";
+import { useLayoutEffect, useRef, type FocusEvent } from "react";
 import AgentConsole from "../components/AgentConsole";
 import Button from "../components/Button";
 import ScaledFrame from "../components/ScaledFrame";
-import { useSceneFade } from "../components/Scene";
+import { RESTING, useSceneFade } from "../components/Scene";
 import TextReveal from "../components/TextReveal";
 import { usePinnable } from "../lib/useDesktop";
 
 const HEIGHT = 200;
 
 const facts = [
-  { icon: ShieldCheck, label: "HIPAA-ready, BAA included" },
-  { icon: UserCheck, label: "A clinician approves each action" },
+  { icon: ShieldCheck, label: "HIPAA BAA before any PHI is shared" },
+  { icon: UserCheck, label: "A clinician approves patient outreach" },
   { icon: Lock, label: "Every action logged" },
 ];
 
@@ -62,10 +62,16 @@ export default function Hero() {
   const consoleMask = useMotionTemplate`linear-gradient(to bottom, black ${maskStop}%, transparent)`;
   const copyY = useTransform(p, (v) => (pinned ? -120 * ease(progress(v)) : 0));
   const copyOpacity = useTransform(p, (v) => (pinned ? 1 - Math.min(1, progress(v) / 0.6) : 1));
+  // Faded copy lets clicks through, and keyboard focus on its buttons brings the hero back.
+  const copyPointer = useTransform(copyOpacity, (o) => (o > 0.6 ? "auto" : "none"));
+  const onCopyFocus = (e: FocusEvent<HTMLDivElement>) => {
+    if (pinned && copyOpacity.get() < 0.95 && (e.target as HTMLElement).matches?.(":focus-visible")) window.scrollTo({ top: 0, behavior: "auto" });
+  };
   const exitOpacity = useTransform(p, [exit, exit + 0.55 * fade.unit], pinned ? [1, 0] : [1, 1]);
   const exitY = useTransform(p, [exit, exit + 0.55 * fade.unit], pinned ? ["0vh", "47vh"] : ["0vh", "0vh"]);
   const exitBlur = useTransform(p, [exit, exit + 0.55 * fade.unit], pinned ? [0, 10] : [0, 0]);
-  const exitFilter = useMotionTemplate`blur(${exitBlur}px)`;
+  const exitFilter = useTransform(exitBlur, (v) => (v > 0.05 ? `blur(${v}px)` : "none"));
+  const exitPointer = useTransform(exitOpacity, (o) => (o > 0.6 ? "auto" : "none"));
 
   const enterAnim = (delay: number) => ({
     initial: reduce ? false : { opacity: 0, y: 12 },
@@ -76,32 +82,32 @@ export default function Hero() {
   return (
     <section id="top" ref={ref} style={pinned ? { height: `${HEIGHT}vh` } : undefined} className="relative overflow-x-clip">
       <motion.div
-        style={pinned ? { opacity: exitOpacity, y: exitY, filter: exitFilter } : undefined}
-        className={pinned ? "sticky top-0 h-screen overflow-hidden" : "relative overflow-hidden pt-24 pb-10"}
+        style={pinned ? { opacity: exitOpacity, y: exitY, filter: exitFilter, pointerEvents: exitPointer } : RESTING}
+        className={pinned ? "sticky top-0 h-screen overflow-hidden" : "relative overflow-hidden pt-16 pb-10"}
       >
 
-        <div className="mx-auto flex h-full w-full max-w-7xl flex-col items-center px-5 pt-24 text-center sm:px-8 lg:px-14 lg:pt-[clamp(84px,11vh,112px)]">
-          <motion.div ref={copyRef} style={{ y: copyY, opacity: copyOpacity }} className="flex flex-col items-center">
+        <div className="mx-auto flex h-full w-full max-w-7xl flex-col items-center px-5 pt-10 text-center sm:px-8 sm:pt-16 lg:px-14 lg:pt-[clamp(84px,11vh,112px)]">
+          <motion.div ref={copyRef} style={{ y: copyY, opacity: copyOpacity, pointerEvents: copyPointer }} onFocusCapture={onCopyFocus} className="flex flex-col items-center">
             <TextReveal
               as="h1"
               animateOn="mount"
               delay={0.05}
               stagger={0.07}
               text="AI agents and analytics for [[healthcare]] teams."
-              className="max-w-[16ch] text-[40px] font-semibold text-fg sm:text-[56px] lg:text-[clamp(48px,8vh,72px)]"
+              className="max-w-[10.6em] text-[40px] font-semibold text-fg sm:text-[56px] lg:text-[clamp(48px,8vh,72px)]"
             />
-            <motion.p {...enterAnim(0.5)} className="mt-5 max-w-[52ch] text-[clamp(17px,2.2vh,20px)] leading-relaxed text-muted">
-              CrewHealth turns clinical, claims and operational data into analytics and agents that act on it. Built first for accountable care, ready for health systems, payers and provider groups.
+            <motion.p {...enterAnim(0.25)} className="mt-5 max-w-[52ch] text-[clamp(17px,2.2vh,20px)] leading-relaxed text-muted">
+              CrewHealth turns clinical, claims and operational data into analytics and agents that act on it. Built first for accountable care, and designed for health systems, payers and provider groups.
             </motion.p>
-            <motion.div {...enterAnim(0.56)} className="mt-7 flex flex-wrap items-center justify-center gap-3">
+            <motion.div {...enterAnim(0.32)} className="mt-7 flex flex-wrap items-center justify-center gap-3">
               <Button size="lg" href="#contact">
                 Book a demo <ArrowRight className="h-4 w-4" />
               </Button>
               <Button size="lg" variant="secondary" href="#demo">
-                <Play className="h-4 w-4 fill-current" /> Watch an agent work
+                <Play className="h-4 w-4 fill-current" /> See how an agent works
               </Button>
             </motion.div>
-            <motion.ul {...enterAnim(0.62)} className="mt-6 flex flex-wrap justify-center gap-x-6 gap-y-2">
+            <motion.ul {...enterAnim(0.38)} className="mt-6 flex flex-wrap justify-center gap-x-6 gap-y-2">
               {facts.map((t) => (
                 <li key={t.label} className="flex items-center gap-2 text-[15px] text-muted">
                   <t.icon className="h-4 w-4 text-accent" aria-hidden="true" /> {t.label}
@@ -115,7 +121,7 @@ export default function Hero() {
             initial={reduce ? false : { scale: 0.98 }}
             animate={{ scale: 1 }}
             transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
-            className="mt-[clamp(24px,4vh,40px)] w-full max-w-5xl"
+            className="mt-[clamp(24px,4vh,40px)] w-full max-w-5xl text-left"
           >
             <motion.div style={{ y: consoleY, scale: consoleScale, maskImage: consoleMask, WebkitMaskImage: consoleMask }} className="origin-top">
               <ScaledFrame width={1024}>
