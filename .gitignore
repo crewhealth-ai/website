@@ -7,3 +7,4 @@ dist
 .playwright-cli/
 .impeccable/
 .qa/
+__pycache__/
