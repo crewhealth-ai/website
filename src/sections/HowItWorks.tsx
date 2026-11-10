@@ -26,7 +26,7 @@ function StackedSteps() {
   return (
     <Scene id="how" mode="flow" surface="white">
       <SectionHeading align="left" title="From raw feeds to closed loops." />
-      <ol className="mt-10 space-y-10">
+      <ol className="mt-10 space-y-12 md:space-y-10">
         {steps.map((s, i) => (
           <StackedStep key={s.title} index={i} step={s} />
         ))}
@@ -40,7 +40,7 @@ function StackedStep({ index, step }: { index: number; step: (typeof steps)[numb
   const inView = useInView(ref, { once: true, margin: "-20% 0px" });
   const Panel = scenes[index];
   return (
-    <li ref={ref}>
+    <li ref={ref} className="md:grid md:grid-cols-[0.85fr_1.15fr] md:items-center md:gap-8">
       <div className="flex items-start gap-4">
         <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-primary-soft text-primary-700">
           <step.icon className="h-4 w-4" />
@@ -50,7 +50,8 @@ function StackedStep({ index, step }: { index: number; step: (typeof steps)[numb
           <p className="mt-1.5 text-[16px] leading-relaxed text-fg/85">{step.body}</p>
         </div>
       </div>
-      <div className="relative mt-5 aspect-[5/4] w-full overflow-hidden rounded-xl border border-line bg-surface p-5">
+      {/* Sized to the scene (about 300px of content), not to the page width, so tablets don't show a mostly empty box. */}
+      <div className="relative mt-5 h-[340px] w-full overflow-hidden rounded-xl border border-line bg-surface p-5 md:mt-0 md:h-[360px]">
         <div className="absolute inset-0 bg-grid mask-fade-radial opacity-70" aria-hidden="true" />
         {inView && <Panel />}
       </div>
