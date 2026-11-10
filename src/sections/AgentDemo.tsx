@@ -1,4 +1,4 @@
-import { motion, useInView, useReducedMotion } from "motion/react";
+import { AnimatePresence, motion, useInView, useReducedMotion } from "motion/react";
 import { Bot, Check, RotateCcw, Server, UserRound } from "lucide-react";
 import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 import Button from "../components/Button";
@@ -33,9 +33,11 @@ export default function AgentDemo() {
     if (!inView) return;
     if (reduce) { setVisible(scenario.steps.length); setApproved(true); return; }
     if (waiting || done) return;
-    const t = setTimeout(() => setVisible((v) => v + 1), visible === 0 ? 300 : 1100);
+    // The first step after the approval follows the click quickly, then the run keeps its pace.
+    const afterApproval = approved && visible === humanIndex + 1;
+    const t = setTimeout(() => setVisible((v) => v + 1), visible === 0 ? 300 : afterApproval ? 450 : 1100);
     return () => clearTimeout(t);
-  }, [inView, visible, waiting, done, reduce, scenario.steps.length, active]);
+  }, [inView, visible, waiting, done, reduce, scenario.steps.length, active, approved, humanIndex]);
 
   // Tabs pattern: arrow keys move between scenarios and select them, Home and End jump to the ends.
   const onTabKey = (e: KeyboardEvent<HTMLButtonElement>, i: number) => {
@@ -84,88 +86,71 @@ export default function AgentDemo() {
             </Button>
           </div>
 
-          {/* Every step is on the card from the start, pending until the run reaches it, so the card never
-              changes height (nothing below it moves) and the whole sequence is visible while it plays. */}
+          {/* Steps appear one at a time. The run stops at the clinician step until someone approves it. */}
           <ol className="mt-5 space-y-3">
-            {scenario.steps.map((step, i) => (
-              <RunStep
-                key={`${scenario.id}-${i}`}
-                step={step}
-                state={i < visible ? (step.actor === "human" && !approved ? "waiting" : "done") : i === visible && inView && !waiting && !done ? "working" : "pending"}
-                gate={step.actor === "human"}
-                approved={approved}
-                onApprove={() => setApproved(true)}
-              />
-            ))}
+            <AnimatePresence initial={false}>
+              {scenario.steps.slice(0, visible).map((step, i) => (
+                <RunStep
+                  key={`${scenario.id}-${i}`}
+                  step={step}
+                  waiting={step.actor === "human" && waiting}
+                  approved={step.actor === "human" && approved}
+                  onApprove={() => setApproved(true)}
+                />
+              ))}
+            </AnimatePresence>
+            {!done && !waiting && visible > 0 && (
+              <li className="flex items-center gap-3 px-4 py-2 text-[14px] text-subtle">
+                <span className="flex gap-1" aria-hidden="true">{[0, 1, 2].map((d) => <motion.span key={d} className="h-1.5 w-1.5 rounded-full bg-primary" animate={reduce ? undefined : { opacity: [0.3, 1, 0.3] }} transition={{ duration: 1, repeat: Infinity, delay: d * 0.2 }} />)}</span>
+                Agent working…
+              </li>
+            )}
           </ol>
           <p className="sr-only" aria-live="polite">
-            {done ? "Run complete." : waiting ? "Waiting for clinician approval." : visible > 0 ? `Step ${visible} of ${scenario.steps.length} done: ${scenario.steps[visible - 1].title}.` : ""}
+            {done ? `Run complete. ${scenario.outcome}` : waiting ? "Waiting for clinician approval." : visible > 0 ? `Step ${visible} of ${scenario.steps.length}: ${scenario.steps[visible - 1].title}.` : ""}
           </p>
 
-          {/* The outcome slot keeps the finished outcome's height; the result fades in when the run completes. */}
-          <div className="mt-5 grid">
-            <div aria-hidden="true" className="invisible col-start-1 row-start-1"><Outcome scenario={scenario} /></div>
-            <div className="col-start-1 row-start-1" aria-live="polite">
-              {done ? (
-                <motion.div initial={reduce ? false : { opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="h-full">
-                  <Outcome scenario={scenario} />
-                </motion.div>
-              ) : (
-                <div className="flex h-full items-center gap-3 rounded-xl border border-dashed border-line-strong p-4 text-[15px] text-subtle">
-                  <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-surface-2"><Check className="h-5 w-5" aria-hidden="true" /></span>
-                  The outcome appears when the run completes.
-                </div>
-              )}
-            </div>
-          </div>
+          <AnimatePresence>
+            {done && (
+              <motion.div initial={reduce ? false : { opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
+                <Outcome scenario={scenario} />
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </div>
     </Scene>
   );
 }
 
-type RunState = "done" | "working" | "waiting" | "pending";
-
-/** One step of a run. The approval control is always laid out on the gate step, so the step keeps one height. */
-function RunStep({ step, state, gate, approved, onApprove }: { step: DemoStep; state: RunState; gate: boolean; approved: boolean; onApprove: () => void }) {
+/** One step of a run. After approval the button stays where it was, as "Approved", so keyboard focus is not lost. */
+function RunStep({ step, waiting, approved, onApprove }: { step: DemoStep; waiting: boolean; approved: boolean; onApprove: () => void }) {
   const reduce = useReducedMotion();
   const m = actorMeta[step.actor];
-  const live = state === "done" || state === "waiting";
   return (
-    <li
-      className={cn(
-        "flex gap-3 rounded-xl border p-3 transition-colors duration-300 sm:gap-4 sm:p-4",
-        state === "waiting" ? "border-accent/40 bg-accent-soft/50" : state === "pending" ? "border-dashed border-line-strong bg-surface" : state === "working" ? "border-primary/30 bg-surface" : "border-line bg-surface",
-      )}
+    <motion.li
+      initial={reduce ? false : { opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+      className={cn("flex gap-3 rounded-xl border p-3 sm:gap-4 sm:p-4", waiting ? "border-accent/40 bg-accent-soft/50" : "border-line bg-surface")}
     >
-      <span className={cn("grid h-9 w-9 shrink-0 place-items-center rounded-lg transition-colors duration-300", live ? m.cls : "bg-surface-2 text-subtle")}><m.icon className="h-4 w-4" aria-hidden="true" /></span>
+      <span className={cn("grid h-9 w-9 shrink-0 place-items-center rounded-lg", m.cls)}><m.icon className="h-4 w-4" aria-hidden="true" /></span>
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-baseline gap-x-2">
-          <p className={cn("font-heading text-[16px] font-semibold transition-colors duration-300", state === "pending" || state === "working" ? "text-muted" : "text-fg")}>{step.title}</p>
-          {state === "working" ? (
-            <span className="flex items-center gap-1.5 text-[13px] font-medium text-primary-700">
-              <span className="flex gap-1" aria-hidden="true">{[0, 1, 2].map((d) => <motion.span key={d} className="h-1.5 w-1.5 rounded-full bg-primary" animate={reduce ? undefined : { opacity: [0.3, 1, 0.3] }} transition={{ duration: 1, repeat: Infinity, delay: d * 0.2 }} />)}</span>
-              Working…
-            </span>
-          ) : (
-            <span className="text-[13px] font-medium text-subtle">{state === "pending" ? "Pending" : m.label}</span>
-          )}
+          <p className="font-heading text-[16px] font-semibold text-fg">{step.title}</p>
+          <span className="text-[13px] font-medium text-subtle">{m.label}</span>
         </div>
-        <p className={cn("mt-1 text-[15px] leading-relaxed transition-colors duration-300", live ? "text-fg/85" : "text-subtle")}>{step.detail}</p>
-        {gate && (
-          <div className="mt-3 flex min-h-10 flex-wrap items-center gap-3">
-            {state === "waiting" || (state === "done" && approved) ? (
-              <Button size="sm" variant={approved ? "secondary" : "primary"} aria-disabled={approved || undefined} onClick={() => { if (!approved) onApprove(); }}>
-                <Check className="h-4 w-4" aria-hidden="true" /> {approved ? "Approved" : "Approve and continue"}
-              </Button>
-            ) : (
-              <span className="text-[14px] text-subtle">Needs clinician approval</span>
-            )}
-            {state === "waiting" && <span className="text-[14px] text-accent-700">Waiting for clinician approval</span>}
+        <p className="mt-1 text-[15px] leading-relaxed text-fg/85">{step.detail}</p>
+        {(waiting || approved) && (
+          <div className="mt-3 flex flex-wrap items-center gap-3">
+            <Button size="sm" variant={approved ? "secondary" : "primary"} aria-disabled={approved || undefined} onClick={() => { if (!approved) onApprove(); }}>
+              <Check className="h-4 w-4" aria-hidden="true" /> {approved ? "Approved" : "Approve and continue"}
+            </Button>
+            {waiting && <span className="text-[14px] text-accent-700">Waiting for clinician approval</span>}
           </div>
         )}
       </div>
-    </li>
+    </motion.li>
   );
 }
 

@@ -33,8 +33,8 @@ shows a demo workspace with fictional patients and organizations. The page says 
 1. **Hero:** headline, the two actions, three commitments, and the console (demo workspace) that rises as you scroll.
 2. **How it works:** Connect, Understand, Act, Learn. Pinned on desktop with a panel per step; stacked on tablets, phones and with reduced motion.
 3. **Agents:** two feature cards with product fragments, six more agents, and the shared analytics layer.
-4. **Demo:** three sample runs with fictional patients. Every step is listed from the start and lights up as the
-   run reaches it; the clinician approval step waits for a click.
+4. **Demo:** three sample runs with fictional patients. Steps appear one at a time; the run stops at the
+   clinician step until someone clicks Approve, then the remaining steps follow.
 5. **Trust:** the autonomy dial (Suggest, Draft, Act with approval, Act) and four commitments.
 6. **Book a demo:** the form, three commitments, and the footer.
 
@@ -65,7 +65,7 @@ In a sandbox without Playwright's own browser, set `CHROMIUM_PATH` to a local Ch
 
 ## Customize
 
-- Agents and demo scenarios: `src/lib/data.ts`. Section order and rail labels: `src/lib/sections.ts`.
+- Agents and demo scenarios: `src/lib/data.ts`.
 - Colours, fonts and shadows: theme tokens in `src/index.css`.
 - Each page section is a self-contained component in `src/sections/`.
 - The demo form posts JSON to `VITE_DEMO_ENDPOINT` when it is set at build time; otherwise it opens the visitor's

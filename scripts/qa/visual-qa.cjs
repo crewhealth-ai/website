@@ -70,7 +70,6 @@ async function run(browser, pagePath, m) {
       h1Clipped: h1 ? h1.scrollWidth > h1.clientWidth + 1 : null,
       h1Text: h1 ? h1.textContent.replace(/\s+/g, " ").trim() : "",
       navSolid: nav ? getComputedStyle(nav).backdropFilter === "none" && getComputedStyle(nav).backgroundColor !== "rgba(0, 0, 0, 0)" : null,
-      railLinks: document.querySelectorAll('nav[aria-label="Page progress"] a').length,
       skipLinkFirst: !!document.querySelector('a[href="#main"]'),
       ogImage: document.querySelector('meta[property="og:image"]')?.getAttribute("content") || "",
       screens: +(document.body.scrollHeight / window.innerHeight).toFixed(1),
